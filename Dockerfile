@@ -8,7 +8,7 @@ RUN rgrep -lE '\bapt-get install -y\b' /usr/src/fusionpbx-install.sh/debian | gr
 
 RUN mkdir /var/run/php
 
-# In theory with use of the custom "systemctl" this should not be necessary.
+# In theory with the use of the custom "systemctl" this should not be necessary.
 RUN sed -i -E 's/^(#+\s*)(.*service\s*postgresql)\b/\2/' /usr/src/fusionpbx-install.sh/debian/resources/postgresql.sh
 
 RUN wget -O - https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl3.py > /opt/systemctl3.py
@@ -17,4 +17,12 @@ RUN perl -0777 -i -pe 's/^(apt-get\s*install.*systemd-sysv.*)$/$1\nmv \/bin\/sys
 
 RUN sh /usr/src/fusionpbx-install.sh/debian/install.sh
 
-ENTRYPOINT ["/bin/systemctl"]
+RUN systemctl enable nginx
+RUN systemctl enable php7.1/fpm
+RUN systemctl enable postgresql
+RUN systemctl enable freeswitch
+
+COPY fusionpbx_main.sh /opt/
+RUN chmod +x /opt/fusionpbx_main.sh
+
+ENTRYPOINT ["/opt/fusionpbx_main.sh"]
